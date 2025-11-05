@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: lightblue;
+        }
+
+        h1 {
+            text-align: center;
+            color: #040404;
+            width: 70%;
+            margin: auto;
+            padding: 15px;
+            background: #0f69ca;
+            border-radius: 8px;
+        }
+
+        form {
+            margin: 20px auto;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            width: 70%;
+            text-align: center;
+        }
+
+        input {
+            padding: 10px 15px;
+            margin-right: 10px;
+            width: 60%;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007BFF;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+            font-style: italic;
+        }
+
+        li {
+            background-color: white;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .todo-list {
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav {
+            background-color: #0f69ca;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-logo {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: #0f69ca;
+                position: absolute;
+                top: 50px;
+                left: 0;
+                padding: 10px 0;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-logo">My To-Do List</div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <div class="nav-links" id="navLinks">
+            <a href="#Home" onclick="returnHome()">Home</a>
+            <a href="#todoList" onclick="loadTodoList()">Retrieve To Do List</a>
+        </div>
+    </nav>
+
+    <!-- <h1>Welcome to your To Do list!</h1> -->
+
+    <form id="todoForm">
+        <input type="text" id="todo" placeholder="Enter an item to do!" required>
+        <button type="submit">Add To-Do</button>
+        <button type="button" onclick="clearTodoList()">Clear List</button>
+    </form>
+
+    <ul id="myList"></ul>
+
+    <script>
+
+        const todoForm = document.getElementById("todoForm");
+        const todoInput = document.getElementById("todo");
+        const list = document.getElementById("myList");
+
+        todoForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const todoText = todoInput.value.trim();
+            if (todoText) {
+                addToDoListItem(todoText);
+            }
+            todoForm.reset();
+        });
+
+        function addToDoListItem(text) {
+            const listItem = document.createElement("li");
+
+            const textSpan = document.createElement("span");
+            textSpan.textContent = text;
+            textSpan.classList.add("todo-list");
+
+            let actionsDiv = document.createElement("div");
+            actionsDiv.classList.add("actions");
+
+            let del_btn = document.createElement("button");
+            del_btn.textContent = "Delete";
+            del_btn.onclick = function () {
+                if (confirm("Delete this item?")) {
+                    listItem.remove();
+                    saveTodoList();
+                }
+            };
+
+            actionsDiv.appendChild(del_btn);
+            listItem.appendChild(textSpan);
+            listItem.appendChild(actionsDiv);
+            list.appendChild(listItem);
+
+            saveTodoList();
+        }
+
+        function saveTodoList() {
+            const itemTexts = [];
+            const myList = document.querySelectorAll("li");
+            myList.forEach(item => {
+                itemTexts.push(item.textContent);
+            });
+            localStorage.setItem("savedTodoList", JSON.stringify(itemTexts));
+        }
+
+        function loadTodoList() {
+            const savedData = localStorage.getItem("savedTodoList");
+            if (savedData) {
+                const retrievedTodoText = JSON.parse(savedData);
+                const rebuildList = document.getElementById("myList");
+                rebuildList.innerHTML = "";
+
+                retrievedTodoText.forEach(text => {
+                    const li = document.createElement("li");
+                    li.textContent = text.slice(0, -6);
+                    rebuildList.appendChild(li);
+                });
+            } else {
+                alert("No list found in localStorage.");
+            }
+        }
+
+        function clearTodoList() {
+            const savedData = localStorage.getItem("savedTodoList");
+            if (savedData) {
+                if (confirm("Are you sure you want to clear all To-Do items?")) {
+                    localStorage.removeItem("savedTodoList");
+                    list.innerHTML = "";
+                }
+            } else {
+                alert("No list found in localStorage.");
+            }
+        }
+
+        function returnHome() {
+            list.innerHTML = "";
+        }
+    </script>
+</body>
+
+</html>
